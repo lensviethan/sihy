@@ -302,3 +302,7 @@ textarea{min-height:84px;resize:vertical}
 @keyframes adsrun{to{transform:translateX(calc(-50% - 8px))}}
 @media(max-width:720px){.ads{padding:10px;border-radius:18px}.ads-tr{gap:10px;animation-duration:20s}@keyframes adsrun{to{transform:translateX(calc(-50% - 5px))}}.ad{width:calc((100vw - 32px - 24px - 10px)/2)}.ad span{font-size:14px;padding:28px 6px 10px}}
 @media(prefers-reduced-motion:reduce){.ads-tr{animation:none!important}.ads{overflow-x:auto}}
+
+.done .st{margin:0 0 8px;font-size:14px}.done .st.ok{color:var(--ok)}.done .st.bad{color:var(--sale)}
+.done .st a{color:inherit;font-weight:700}
+.btn:disabled{opacity:.6;cursor:default}

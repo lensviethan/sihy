@@ -65,21 +65,34 @@ $$('[data-open-cart]').forEach(function(b){b.onclick=function(e){e.preventDefaul
 function pick(wrap){var q=+(($('.qin',wrap)||{}).value)||1,l=$('.dol',wrap),r=$('.dor',wrap);
  return {q:Math.max(1,q),o:(l&&r)?'Độ: trái '+l.value+' / phải '+r.value:''}}
 
-/* gửi đơn: sao chép + mở chat */
-function send(text,to,box){if(box){$('pre',box).textContent=text;box.hidden=false}
- var ok=function(){toast('Đã sao chép đơn hàng. Dán vào khung chat để gửi.')};
- try{if(navigator.clipboard)navigator.clipboard.writeText(text).then(ok,function(){toast('Hãy chép nội dung đơn hàng bên dưới và gửi cho SIHY.')})}catch(e){}
- window.open(to==='zalo'?'https://zalo.me/'+ZALO:MESS,'_blank','noopener')}
+/* gửi đơn: email về SIHY (FormSubmit) + tùy chọn mở Zalo/Messenger */
+var MAIL='https://formsubmit.co/ajax/infor.sihy@gmail.com';
+function status(box,html,cls){if(!box)return;var st=$('.st',box);if(!st){st=document.createElement('p');st.className='st';box.insertBefore(st,box.firstChild)}st.className='st '+(cls||'');st.innerHTML=html}
+function mail(text,info,form){if(form&&form._sent===text)return Promise.resolve(true);
+ var body={_subject:'Đơn hàng SIHY – '+info.ten+' – '+info.sdt,_template:'box',_captcha:'false','Khách hàng':info.ten,'Số điện thoại':info.sdt,'Địa chỉ':info.dc,'Nội dung đơn':text};
+ return fetch(MAIL,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)})
+  .then(function(r){return r.json().catch(function(){return{}}).then(function(j){var ok=r.ok&&String(j.success)!=='false';if(ok&&form)form._sent=text;return ok})})
+  .catch(function(){return false})}
+function send(text,to,box,form,info,after){if(box){$('pre',box).textContent=text;box.hidden=false}
+ var btns=form?$$('button',form):[];btns.forEach(function(b){b.disabled=true});
+ if(to!=='mail'){try{if(navigator.clipboard)navigator.clipboard.writeText(text).then(function(){toast('Đã sao chép đơn hàng. Dán vào khung chat để gửi.')},function(){})}catch(e){}
+  window.open(to==='zalo'?'https://zalo.me/'+ZALO:MESS,'_blank','noopener')}
+ status(box,'Đang gửi đơn về SIHY…');
+ mail(text,info,form).then(function(ok){btns.forEach(function(b){b.disabled=false});
+  if(ok){status(box,'<b>SIHY đã nhận đơn hàng.</b> Nhân viên sẽ gọi số '+esc(info.sdt)+' để xác nhận trước khi giao.','ok');toast('Đã gửi đơn hàng');if(after)after()}
+  else status(box,'Chưa gửi được đơn qua email. Bấm <b>Gửi qua Zalo</b> hoặc gọi <a href="tel:'+ZALO+'">0862 626 488</a> để đặt hàng.','bad')})}
+function info(f){return{ten:f.ten.value.trim(),sdt:f.sdt.value.trim(),dc:f.dc.value.trim()}}
 function cust(f){var l=['Khách: '+f.ten.value,'SĐT: '+f.sdt.value,'Địa chỉ: '+f.dc.value];if(f.gc&&f.gc.value)l.push('Ghi chú: '+f.gc.value);return l}
 function quickOrder(f,to){if(!f.reportValidity())return;var id=f.dataset.id,p=P[id],o=pick(f.closest('[data-pd]')||document),tt=p.p*o.q;
  if(f.dol){var dl=f.dol.value.trim(),dr=f.dor.value.trim();if(dl||dr)o.o='Độ cận: mắt trái '+(dl||'chưa ghi')+' / mắt phải '+(dr||'chưa ghi')}
  var l=['ĐƠN HÀNG SIHY LENS','- '+p.n+' x'+o.q+(o.o?' ('+o.o+')':'')+' = '+vnd(tt),'Tạm tính: '+vnd(tt)+(tt>=300000?' (miễn phí ship)':'')].concat(cust(f));
- send(l.join('\n'),to,$('.done',f))}
+ send(l.join('\n'),to,$('.done',f),f,info(f))}
 var fm=$('#c-form');
-function cartOrder(to){if(!fm.reportValidity())return;var l=['ĐƠN HÀNG SIHY LENS'];
+function cartOrder(to){if(!fm.reportValidity()||!cart.length)return;var l=['ĐƠN HÀNG SIHY LENS'];
  cart.forEach(function(x){var p=P[x.id]||{n:x.id,p:0};l.push('- '+p.n+' x'+x.q+(x.o?' ('+x.o+')':'')+' = '+vnd(p.p*x.q))});
- var tt=total();l.push('Tạm tính: '+vnd(tt)+(tt>=300000?' (miễn phí ship)':''));send(l.concat(cust(fm.elements)).join('\n'),to,$('#c-done'))}
-if(fm){fm.onsubmit=function(e){e.preventDefault();cartOrder('zalo')};$('#c-mess').onclick=function(){cartOrder('mess')}}
+ var tt=total();l.push('Tạm tính: '+vnd(tt)+(tt>=300000?' (miễn phí ship)':''));
+ send(l.concat(cust(fm.elements)).join('\n'),to,$('#c-done'),fm,info(fm.elements),function(){cart=[];save(cart);badge()})}
+if(fm){fm.onsubmit=function(e){e.preventDefault();cartOrder('mail')};$('#c-zalo').onclick=function(){cartOrder('zalo')};$('#c-mess').onclick=function(){cartOrder('mess')}}
 
 /* xem nhanh sản phẩm */
 var qv=$('#qv');
@@ -90,7 +103,7 @@ function openQV(id){var p=P[id];if(!p||!qv)return;var d=p.o&&p.o>p.p?Math.round(
  '<div class="pi"><span class="eyebrow">'+esc(p.c)+'</span><h2 class="qv-h">'+esc(p.n)+'</h2><div class="price"><b>'+vnd(p.p)+'</b>'+(d?'<s>'+vnd(p.o)+'</s><em>-'+d+'%</em>':'')+'</div>'+
  '<table class="specs">'+p.s.map(function(r){return '<tr><th>'+r[0]+'</th><td>'+esc(r[1])+'</td></tr>'}).join('')+'</table>'+
  '<div class="buy"><div class="qty"><button type="button" data-d="-1" aria-label="Giảm">−</button><input class="qin" id="qv-qty" value="1" inputmode="numeric" aria-label="Số lượng"><button type="button" data-d="1" aria-label="Tăng">+</button></div><button class="btn o" type="button" data-add="'+id+'">Thêm vào giỏ</button></div>'+
- '<form class="oform" data-id="'+id+'"><h3>Đặt hàng nhanh</h3><div class="two"><input id="qv-ten" name="ten" placeholder="Họ tên" required autocomplete="name"><input id="qv-sdt" name="sdt" placeholder="Số điện thoại" required inputmode="tel" pattern="[0-9 +]{9,13}" autocomplete="tel"></div><input id="qv-dc" name="dc" placeholder="Địa chỉ nhận hàng" required autocomplete="street-address">'+(p.l?'<div class="two"><input id="qv-dol" name="dol" placeholder="Độ cận mắt trái" autocomplete="off"><input id="qv-dor" name="dor" placeholder="Độ cận mắt phải" autocomplete="off"></div>':'<input id="qv-gc" name="gc" placeholder="Ghi chú (không bắt buộc)">')+'<div class="two"><button class="btn" type="submit">Đặt qua Zalo</button><button class="btn o" type="button" data-mess>Đặt qua Messenger</button></div><p class="note">Đơn hàng được sao chép sẵn, bạn chỉ cần dán vào khung chat để gửi. SIHY gọi xác nhận trước khi giao, thanh toán khi nhận hàng.</p><div class="done" hidden><b>Nội dung đơn hàng</b><pre></pre></div></form>'+
+ '<form class="oform" data-id="'+id+'"><h3>Đặt hàng nhanh</h3><div class="two"><input id="qv-ten" name="ten" placeholder="Họ tên" required autocomplete="name"><input id="qv-sdt" name="sdt" placeholder="Số điện thoại" required inputmode="tel" pattern="[0-9 +]{9,13}" autocomplete="tel"></div><input id="qv-dc" name="dc" placeholder="Địa chỉ nhận hàng" required autocomplete="street-address">'+(p.l?'<div class="two"><input id="qv-dol" name="dol" placeholder="Độ cận mắt trái" autocomplete="off"><input id="qv-dor" name="dor" placeholder="Độ cận mắt phải" autocomplete="off"></div>':'<input id="qv-gc" name="gc" placeholder="Ghi chú (không bắt buộc)">')+'<button class="btn" type="submit">Đặt hàng</button><div class="two"><button class="btn o" type="button" data-zalo>Gửi qua Zalo</button><button class="btn o" type="button" data-mess>Gửi qua Messenger</button></div><p class="note">Bấm Đặt hàng, đơn được gửi thẳng về SIHY. SIHY gọi xác nhận trước khi giao, thanh toán khi nhận hàng.</p><div class="done" hidden><b>Nội dung đơn hàng</b><pre></pre></div></form>'+
  '</div></div><section class="qv-desc"><h3>Mô tả chi tiết</h3><div class="prose">'+p.d+'</div><p><a class="btn o sm" href="'+id+'.html">Mở trang sản phẩm</a></p></section>';
  qv.hidden=false;qv.querySelector('.pn').scrollTop=0;document.body.style.overflow='hidden'}
 function closeQV(){qv.hidden=true;document.body.style.overflow=''}
@@ -104,7 +117,8 @@ document.addEventListener('click',function(e){
  var t=e.target.closest('.thumbs button');if(t){var g=t.closest('.gal');$('.main img',g).src=t.dataset.src;$$('.thumbs button',g).forEach(function(x){x.classList.toggle('on',x===t)});return}
  var q=e.target.closest('.qty [data-d]');if(q){var inp=$('input',q.parentNode);inp.value=Math.max(1,(+inp.value||1)+(+q.dataset.d));return}
  var a=e.target.closest('[data-add]');if(a){var id=a.dataset.add,w=a.closest('[data-pd]'),o=w?pick(w):{q:1,o:''};add(id,o.q,o.o);toast('Đã thêm '+(P[id]?P[id].n:'')+' vào giỏ');return}
- var m=e.target.closest('.oform [data-mess]');if(m){quickOrder(m.closest('form'),'mess')}});
-document.addEventListener('submit',function(e){var f=e.target;if(f.classList.contains('oform')){e.preventDefault();quickOrder(f,'zalo')}});
+ var m=e.target.closest('.oform [data-mess]');if(m){quickOrder(m.closest('form'),'mess');return}
+ var z=e.target.closest('.oform [data-zalo]');if(z){quickOrder(z.closest('form'),'zalo')}});
+document.addEventListener('submit',function(e){var f=e.target;if(f.classList.contains('oform')){e.preventDefault();quickOrder(f,'mail')}});
 badge();
 })();

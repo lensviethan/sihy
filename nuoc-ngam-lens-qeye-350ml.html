@@ -36,8 +36,9 @@
 <div class="two"><input id="pd-ten" name="ten" placeholder="Họ tên" required autocomplete="name"><input id="pd-sdt" name="sdt" placeholder="Số điện thoại" required inputmode="tel" pattern="[0-9 +]{9,13}" autocomplete="tel"></div>
 <input id="pd-dc" name="dc" placeholder="Địa chỉ nhận hàng" required autocomplete="street-address">
 <input id="pd-gc" name="gc" placeholder="Ghi chú (không bắt buộc)">
-<div class="two"><button class="btn" type="submit">Đặt qua Zalo</button><button class="btn o" type="button" data-mess>Đặt qua Messenger</button></div>
-<p class="note">Đơn hàng được sao chép sẵn, bạn chỉ cần dán vào khung chat để gửi. SIHY gọi xác nhận trước khi giao, thanh toán khi nhận hàng.</p>
+<button class="btn" type="submit">Đặt hàng</button>
+<div class="two"><button class="btn o" type="button" data-zalo>Gửi qua Zalo</button><button class="btn o" type="button" data-mess>Gửi qua Messenger</button></div>
+<p class="note">Bấm Đặt hàng, đơn được gửi thẳng về SIHY. SIHY gọi xác nhận trước khi giao, thanh toán khi nhận hàng.</p>
 <div class="done" hidden><b>Nội dung đơn hàng</b><pre></pre></div></form>
 <ul class="promise"><li>Đo mắt miễn phí khi mua tại cửa hàng</li><li>Miễn phí giao hàng toàn quốc đơn từ 300k</li><li>Bảo hành 7 ngày, kiểm tra hàng trước khi thanh toán</li></ul>
 </div></div>
@@ -74,9 +75,9 @@
 <div class="two"><input id="c-ten" name="ten" placeholder="Họ tên" required autocomplete="name"><input id="c-sdt" name="sdt" placeholder="Số điện thoại" required inputmode="tel" pattern="[0-9 +]{9,13}" autocomplete="tel"></div>
 <input id="c-dc" name="dc" placeholder="Địa chỉ nhận hàng" required autocomplete="street-address">
 <textarea id="c-gc" name="gc" placeholder="Ghi chú (độ cận từng mắt, giờ nhận hàng…)"></textarea>
-<button class="btn" type="submit">Gửi đơn qua Zalo</button>
-<button class="btn o" type="button" id="c-mess">Gửi đơn qua Messenger</button>
-<p class="note">Đơn hàng được sao chép sẵn. Khung chat mở ra, bạn chỉ cần dán và gửi. SIHY gọi xác nhận trước khi giao, thanh toán khi nhận hàng.</p>
+<button class="btn" type="submit">Đặt hàng</button>
+<div class="two"><button class="btn o" type="button" id="c-zalo">Gửi qua Zalo</button><button class="btn o" type="button" id="c-mess">Gửi qua Messenger</button></div>
+<p class="note">Bấm Đặt hàng, đơn được gửi thẳng về SIHY. SIHY gọi xác nhận trước khi giao, thanh toán khi nhận hàng.</p>
 <div class="done" id="c-done" hidden><b>Nội dung đơn hàng</b><pre></pre></div>
 </form></div></div></div>
 <div class="qv" id="qv" hidden><div class="pn" role="dialog" aria-label="Chi tiết sản phẩm"><button class="icon-btn qv-x" data-close aria-label="Đóng"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="qv-body"></div></div></div>
