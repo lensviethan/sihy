@@ -313,3 +313,11 @@ textarea{min-height:84px;resize:vertical}
 .prose .ad{width:calc((min(760px,100vw - 32px) - 28px - 32px)/3)}
 .prose .ad span{font-size:14px;padding:26px 6px 10px}
 @media(max-width:720px){.prose .ad{width:calc((100vw - 32px - 28px - 10px)/2)}.prose .ad span{font-size:12px;padding:20px 4px 6px}}
+
+/* bài viết: thẻ địa chỉ + bản đồ */
+.addr-card{display:grid;border:1px solid var(--line);border-radius:14px;padding:6px 18px;margin:0 0 18px;background:var(--gold-soft)}
+.addr-card p{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0!important;padding:10px 0;border-bottom:1px solid var(--line);text-align:left!important}
+.addr-card p:last-child{border:0}.addr-card span{color:var(--ink-2);font-size:15px}.addr-card b{text-align:right}
+.map-embed{display:block;width:100%;max-width:100%;aspect-ratio:16/10;border:0;border-radius:14px;background:var(--mist);margin:8px 0 12px}
+.prose .map-cta{text-align:left}.prose .map-cta .btn{color:var(--paper)}
+@media(max-width:560px){.addr-card b{text-align:left}.map-embed{aspect-ratio:4/5}}
