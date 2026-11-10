@@ -82,7 +82,7 @@ function send(text,to,box,form,info,after){if(box){$('pre',box).textContent=text
   if(ok){status(box,'<b>SIHY đã nhận đơn hàng.</b> Nhân viên sẽ gọi số '+esc(info.sdt)+' để xác nhận trước khi giao.','ok');toast('Đã gửi đơn hàng');if(after)after()}
   else status(box,'Chưa gửi được đơn qua email. Bấm <b>Gửi qua Zalo</b> hoặc gọi <a href="tel:'+ZALO+'">0862 626 488</a> để đặt hàng.','bad')})}
 function info(f){return{ten:f.ten.value.trim(),sdt:f.sdt.value.trim(),dc:f.dc.value.trim()}}
-function cust(f){var l=['Khách: '+f.ten.value,'SĐT: '+f.sdt.value,'Địa chỉ: '+f.dc.value];if(f.gc&&f.gc.value)l.push('Ghi chú: '+f.gc.value);return l}
+function cust(f){var l=['Khách: '+f.ten.value,'SĐT: '+f.sdt.value,'Địa chỉ: '+f.dc.value];if(f.dol&&!f.dol.closest('.oform')){var dl=f.dol.value.trim(),dr=f.dor.value.trim();l.push('Độ mắt trái: '+(dl||'chưa ghi'),'Độ mắt phải: '+(dr||'chưa ghi'))}if(f.gc&&f.gc.value)l.push('Ghi chú: '+f.gc.value);return l}
 function quickOrder(f,to){if(!f.reportValidity())return;var id=f.dataset.id,p=P[id],o=pick(f.closest('[data-pd]')||document),tt=p.p*o.q;
  if(f.dol){var dl=f.dol.value.trim(),dr=f.dor.value.trim();if(dl||dr)o.o='Độ cận: mắt trái '+(dl||'chưa ghi')+' / mắt phải '+(dr||'chưa ghi')}
  var l=['ĐƠN HÀNG SIHY LENS','- '+p.n+' x'+o.q+(o.o?' ('+o.o+')':'')+' = '+vnd(tt),'Tạm tính: '+vnd(tt)+(tt>=300000?' (miễn phí ship)':'')].concat(cust(f));
