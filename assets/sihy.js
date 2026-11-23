@@ -120,6 +120,39 @@ document.addEventListener('click',function(e){
  var m=e.target.closest('.oform [data-mess]');if(m){quickOrder(m.closest('form'),'mess');return}
  var z=e.target.closest('.oform [data-zalo]');if(z){quickOrder(z.closest('form'),'zalo')}});
 document.addEventListener('submit',function(e){var f=e.target;if(f.classList.contains('oform')){e.preventDefault();quickOrder(f,'mail')}});
+
+/* đặt lịch đo mắt: popup form, gửi email về SIHY như đơn hàng, khoá nút sau khi gửi */
+var bk=null;
+function pad(n){return (n<10?'0':'')+n}
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function bkSlots(){var f=$('#bk-form'),dv=f.ngay.value,sel=f.gio,now=new Date(),today=dv===ymd(now),cur=sel.value,h='<option value="">Chọn giờ</option>';
+ for(var m=8*60;m<=21*60;m+=30){var t=pad(Math.floor(m/60))+':'+pad(m%60);if(today&&m<=now.getHours()*60+now.getMinutes()+30)continue;h+='<option'+(t===cur?' selected':'')+'>'+t+'</option>'}
+ sel.innerHTML=h;if(sel.options.length<2)sel.innerHTML='<option value="">Hết giờ hôm nay, chọn ngày khác</option>'}
+function bkBuild(){bk=document.createElement('div');bk.className='qv bk';bk.id='bk';bk.hidden=true;
+ bk.innerHTML='<div class="pn" role="dialog" aria-modal="true" aria-labelledby="bk-h"><button class="icon-btn qv-x" type="button" data-close aria-label="Đóng"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'+
+ '<span class="eyebrow">Miễn phí · Máy đo Huviz Hàn Quốc</span><h2 class="qv-h" id="bk-h">Đặt lịch đo mắt</h2><p class="note">SIHY Luxury Lens – 111 Trần Khắc Chân, Phường Tân Định, Quận 1. Mở cửa 08:00 – 21:30 mỗi ngày.</p>'+
+ '<form class="oform" id="bk-form" novalidate><input name="ten" placeholder="Họ tên" required autocomplete="name" aria-label="Họ tên"><input name="sdt" type="tel" placeholder="Số điện thoại" required inputmode="tel" pattern="0[0-9]{9}" autocomplete="tel" aria-label="Số điện thoại">'+
+ '<div class="two"><label class="bk-l">Ngày đo<input name="ngay" type="date" required></label><label class="bk-l">Giờ đo<select name="gio" required></select></label></div>'+
+ '<button class="btn" type="submit">Đặt lịch</button><p class="note">SIHY sẽ gọi lại để xác nhận lịch hẹn.</p><div class="done" hidden></div></form></div>';
+ document.body.appendChild(bk);var f=$('#bk-form'),d=new Date(),mx=new Date();mx.setDate(mx.getDate()+60);
+ f.ngay.min=ymd(d);f.ngay.max=ymd(mx);f.ngay.value=ymd(d);bkSlots();f.ngay.addEventListener('change',bkSlots);
+ bk.addEventListener('click',function(e){if(e.target===bk||e.target.closest('[data-close]'))bkClose()});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&bk&&!bk.hidden)bkClose()});
+ f.addEventListener('submit',function(e){e.preventDefault();if(f._locked)return;
+  var sdt=f.sdt.value.replace(/[\s.+-]/g,'');if(/^84/.test(sdt))sdt='0'+sdt.slice(2);f.sdt.value=sdt;
+  if(!f.reportValidity())return;
+  var btn=$('button[type=submit]',f),box=$('.done',f),ten=f.ten.value.trim(),p=f.ngay.value.split('-'),ngay=p[2]+'/'+p[1]+'/'+p[0],gio=f.gio.value;
+  f._locked=true;btn.disabled=true;btn.textContent='Đang gửi…';$$('input,select',f).forEach(function(x){x.readOnly=true;if(x.tagName==='SELECT')x.disabled=true});
+  var body={_subject:'Đặt lịch đo mắt SIHY – '+ten+' – '+sdt+' – '+gio+' '+ngay,_template:'box',_captcha:'false','Loại':'ĐẶT LỊCH ĐO MẮT','Khách hàng':ten,'Số điện thoại':sdt,'Ngày đo':ngay,'Giờ đo':gio,'Trang đặt':location.href};
+  fetch(MAIL,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)})
+  .then(function(r){return r.json().catch(function(){return{}}).then(function(j){return r.ok&&String(j.success)!=='false'})}).catch(function(){return false})
+  .then(function(ok){box.hidden=false;
+   if(ok){btn.textContent='Đã đặt lịch';box.innerHTML='<p class="st ok"><b>Đặt lịch thành công!</b> Hẹn '+esc(ten)+' lúc <b>'+gio+' ngày '+ngay+'</b> tại SIHY, 111 Trần Khắc Chân, Quận 1. SIHY sẽ gọi số '+esc(sdt)+' để xác nhận.</p>';toast('Đặt lịch thành công')}
+   else{f._locked=false;btn.disabled=false;btn.textContent='Gửi lại';$$('input,select',f).forEach(function(x){x.readOnly=false;x.disabled=false});
+    box.innerHTML='<p class="st bad">Chưa gửi được lịch hẹn. Vui lòng thử lại hoặc gọi <a href="tel:'+ZALO+'">0862 626 488</a>.</p>'}})})}
+function bkOpen(){if(!bk)bkBuild();else if(!$('#bk-form')._locked)bkSlots();bk.hidden=false;document.body.style.overflow='hidden';var f=$('#bk-form');if(!f._locked)setTimeout(function(){f.ten.focus()},50)}
+function bkClose(){bk.hidden=true;document.body.style.overflow=''}
+$$('[data-booking]').forEach(function(a){a.addEventListener('click',function(e){if(e.ctrlKey||e.metaKey||e.shiftKey)return;e.preventDefault();bkOpen()})});
 badge();
 })();
 
