@@ -1,6 +1,44 @@
 <!DOCTYPE html>
 <html lang="vi"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="UTF-8">
+<base href="/">
+<script>
+/* Link cũ của sihylens.vn (web trước) hoặc gõ sai: tự tìm trang mới phù hợp và chuyển tới */
+(function(){
+ var raw=location.pathname,p;
+ try{p=decodeURIComponent(raw)}catch(e){p=raw}
+ p=p.toLowerCase().replace(/\/index\.(html?|php)$/,'').replace(/\/+$/,'');
+ if(/^\/(images|assets|upload|data)\//.test(p)||/\.(jpe?g|png|gif|webp|svg|css|js|json|xml|ico|pdf)$/.test(p))return;
+ document.documentElement.className+=' redir';
+ var seg=p.split('/').filter(Boolean),last=(seg[seg.length-1]||'').replace(/\.(html?|php)$/,'');
+ function go(u){location.replace('/'+u+location.hash)}
+ var alias=[[/^(tin-tuc|tin-tuc-su-kien|bai-viet|news|blog|nha-san-xuat|kien-thuc)/,'tin-tuc.html'],
+  [/^(san-pham|danh-muc|shop|cua-hang|gio-hang|thanh-toan|cart|checkout|tim-kiem|search)/,'san-pham.html'],
+  [/^(gioi-thieu|about|sihy-lens-brand)/,'gioi-thieu-ve-sihy.html'],
+  [/^(lien-he|contact|dia-chi|ban-do)/,'lien-he.html'],
+  [/^(do-mat|dat-lich|do-kiem-tra|kiem-tra-mat)/,'do-kiem-tra-thi-luc-mat.html'],
+  [/^(chinh-sach|bao-hanh|doi-tra|van-chuyen)/,'chinh-sach-ban-hang.html']];
+ fetch('/sitemap.xml').then(function(r){return r.text()}).then(function(x){
+  var pages=(x.match(/<loc>[^<]+<\/loc>/g)||[]).map(function(l){return l.replace(/<\/?loc>/g,'').replace(/^https?:\/\/[^\/]+\//,'')}).filter(Boolean),
+      slugs=pages.map(function(u){return u.replace(/\.html$/,'')});
+  if(/^(kinh-ap-trong|lens|lens-mat|contact-lens|kinh-ap-trong-mau|lens-mau)$/.test(last))return go('san-pham.html');
+  var tries=[last].concat(seg.slice(0,-1).reverse());
+  for(var t=0;t<tries.length;t++){var k=slugs.indexOf(tries[t].replace(/\.(html?|php)$/,''));if(k>-1)return go(pages[k])}
+  var best=-1,score=0,tk=last.split('-').filter(function(w){return w.length>1}),df={};
+  slugs.forEach(function(s){s.split('-').forEach(function(w){df[w]=(df[w]||0)+1})});
+  function idf(w){return Math.log((slugs.length+1)/((df[w]||0)+1))+1}
+  var tot=tk.reduce(function(a,x){return a+idf(x)},0);
+  slugs.forEach(function(s,k){var w=s.split('-'),c=0,wt=w.reduce(function(a,x){return a+idf(x)},0);tk.forEach(function(x){if(w.indexOf(x)>-1)c+=idf(x)});
+   var sc=tot&&wt?(c/tot+c/wt)/2:0;if(last&&(s.indexOf(last)===0||last.indexOf(s)===0))sc=Math.max(sc,.9);if(sc>score){score=sc;best=k}});
+  if(best>-1&&score>=.6)return go(pages[best]);
+  for(var a=0;a<alias.length;a++)for(var t2=0;t2<seg.length;t2++)if(alias[a][0].test(seg[t2]))return go(alias[a][1]);
+  away();
+ }).catch(away);
+ function away(){location.replace('https://vklens.vn/')}
+})();
+</script>
+<style>html.redir main.w{visibility:hidden}</style>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Không tìm thấy trang | SIHY</title><meta name="description" content="Trang bạn tìm không tồn tại.">
 <link rel="canonical" href="https://sihylens.vn/404.html">
 <meta property="og:type" content="website"><meta property="og:site_name" content="SIHY Luxury Lens"><meta property="og:title" content="Không tìm thấy trang | SIHY"><meta property="og:description" content="Trang bạn tìm không tồn tại."><meta property="og:url" content="https://sihylens.vn/404.html"><meta property="og:image" content="https://sihylens.vn/images/sihylens/upload/img/banner/banner-01-other.jpg"><meta property="og:locale" content="vi_VN"><meta name="theme-color" content="#18202c">
