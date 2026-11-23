@@ -1,4 +1,4 @@
-name: Deploy sihy.vn
+name: Deploy sihylens.vn
 on:
   push:
     branches: [main]
