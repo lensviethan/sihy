@@ -339,3 +339,7 @@ input[readonly],select:disabled{opacity:.7}
 .bk .two>*{min-width:0}
 .bk input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;text-align:left}
 .bk input[type=date]::-webkit-date-and-time-value{text-align:left}
+/* logo footer: chữ SIHY màu trắng trên nền tối, logo lớn hơn */
+.ft .logo-svg{height:70px}
+.ft .logo .l1{fill:#fff}
+.ft .logo .l2{fill:#c9a56a}
