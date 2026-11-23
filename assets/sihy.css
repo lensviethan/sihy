@@ -343,3 +343,5 @@ input[readonly],select:disabled{opacity:.7}
 .ft .logo-svg{height:70px}
 .ft .logo .l1{fill:#fff}
 .ft .logo .l2{fill:#fff}
+
+.price b .unit,.unit{font-size:.6em;font-weight:500;color:var(--ink-2);margin-left:2px;white-space:nowrap}

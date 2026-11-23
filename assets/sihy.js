@@ -4,6 +4,10 @@ var P=window.SIHY_P||{},ZALO='0862626488',MESS='https://m.me/sihylens.vn',KEY='s
 function $(s,r){return (r||document).querySelector(s)}
 function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
 function vnd(n){return n.toLocaleString('vi-VN')+'đ'}
+/* kính áp tròng: giá cho 1 chiếc (phụ kiện thì không) */
+function isLens(p){return !!p&&!!p.c&&p.c!=='Phụ kiện'}
+function unit(p){return isLens(p)?'<small class="unit">/1 chiếc</small>':''}
+function line(p,q,o,sum){return '- '+p.n+(o?' ('+o+')':'')+': '+(isLens(p)?q+' chiếc x '+vnd(p.p)+'/chiếc':'x'+q)+' = '+vnd(sum)}
 function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
 function save(c){try{localStorage.setItem(KEY,JSON.stringify(c))}catch(e){}}
@@ -53,7 +57,7 @@ var cd=$('#cart');
 function render(){if(!cd)return;var it=$('.items',cd);
  if(!cart.length){it.innerHTML='<p class="empty">Giỏ hàng đang trống.<br>Chọn mẫu lens bạn thích để thêm vào giỏ.</p>';$('.sum',cd).hidden=true;return}
  $('.sum',cd).hidden=false;
- it.innerHTML=cart.map(function(x,n){var p=P[x.id]||{n:x.id,p:0,i:''};return '<div class="ci"><img src="'+p.i+'" alt=""><div><b>'+esc(p.n)+'</b>'+(x.o?'<small>'+esc(x.o)+'</small><br>':'')+'<small>'+vnd(p.p)+'</small><div class="q"><button data-n="'+n+'" data-cq="-1" aria-label="Giảm">−</button><span>'+x.q+'</span><button data-n="'+n+'" data-cq="1" aria-label="Tăng">+</button></div></div><button class="rm" data-rm="'+n+'">Xóa</button></div>'}).join('');
+ it.innerHTML=cart.map(function(x,n){var p=P[x.id]||{n:x.id,p:0,i:''};return '<div class="ci"><img src="'+p.i+'" alt=""><div><b>'+esc(p.n)+'</b>'+(x.o?'<small>'+esc(x.o)+'</small><br>':'')+'<small>'+vnd(p.p)+(isLens(p)?'/1 chiếc':'')+'</small><div class="q"><button data-n="'+n+'" data-cq="-1" aria-label="Giảm">−</button><span>'+x.q+'</span><button data-n="'+n+'" data-cq="1" aria-label="Tăng">+</button></div></div><button class="rm" data-rm="'+n+'">Xóa</button></div>'}).join('');
  var tt=total();$('#c-sub').textContent=vnd(tt);$('#c-ship').textContent=tt>=300000?'Miễn phí':'Báo khi xác nhận đơn';$('#c-total').textContent=vnd(tt)}
 if(cd){cd.addEventListener('click',function(e){if(e.target===cd||e.target.closest('[data-close]')){cd.hidden=true;return}
  var b=e.target.closest('[data-cq]');if(b){var x=cart[+b.dataset.n];x.q+=+b.dataset.cq;if(x.q<1)cart.splice(+b.dataset.n,1);save(cart);badge();render()}
@@ -92,11 +96,11 @@ function info(f){return{ten:f.ten.value.trim(),sdt:f.sdt.value.trim(),dc:f.dc.va
 function cust(f){var l=['Khách: '+f.ten.value,'SĐT: '+f.sdt.value,'Địa chỉ: '+f.dc.value];if(f.dol&&!f.dol.closest('.oform')){var dl=f.dol.value.trim(),dr=f.dor.value.trim();l.push('Độ mắt trái: '+(dl||'chưa ghi'),'Độ mắt phải: '+(dr||'chưa ghi'))}if(f.gc&&f.gc.value)l.push('Ghi chú: '+f.gc.value);return l}
 function quickOrder(f,to){if(!f.reportValidity())return;var id=f.dataset.id,p=P[id],o=pick(f.closest('[data-pd]')||document),tt=p.p*o.q;
  if(f.dol){var dl=f.dol.value.trim(),dr=f.dor.value.trim();if(dl||dr)o.o='Độ cận: mắt trái '+(dl||'chưa ghi')+' / mắt phải '+(dr||'chưa ghi')}
- var l=['ĐƠN HÀNG SIHY LENS','- '+p.n+' x'+o.q+(o.o?' ('+o.o+')':'')+' = '+vnd(tt),'Tạm tính: '+vnd(tt)+(tt>=300000?' (miễn phí ship)':'')].concat(cust(f));
+ var l=['ĐƠN HÀNG SIHY LENS',line(p,o.q,o.o,tt),'Tạm tính: '+vnd(tt)+(tt>=300000?' (miễn phí ship)':'')].concat(cust(f));
  send(l.join('\n'),to,$('.done',f),f,info(f))}
 var fm=$('#c-form');
 function cartOrder(to){if(!fm.reportValidity()||!cart.length)return;var l=['ĐƠN HÀNG SIHY LENS'];
- cart.forEach(function(x){var p=P[x.id]||{n:x.id,p:0};l.push('- '+p.n+' x'+x.q+(x.o?' ('+x.o+')':'')+' = '+vnd(p.p*x.q))});
+ cart.forEach(function(x){var p=P[x.id]||{n:x.id,p:0};l.push(line(p,x.q,x.o,p.p*x.q))});
  var tt=total();l.push('Tạm tính: '+vnd(tt)+(tt>=300000?' (miễn phí ship)':''));
  send(l.concat(cust(fm.elements)).join('\n'),to,$('#c-done'),fm,info(fm.elements),function(){cart=[];save(cart);badge()})}
 if(fm){fm.onsubmit=function(e){e.preventDefault();cartOrder('mail')};$('#c-zalo').onclick=function(){cartOrder('zalo')};$('#c-mess').onclick=function(){cartOrder('mess')}}
@@ -107,7 +111,7 @@ function openQV(id){var p=P[id];if(!p||!qv)return;var d=p.o&&p.o>p.p?Math.round(
  var opts=DO.map(function(v){return '<option>'+v+'</option>'}).join('');
  var thumbs=p.g.length>1?p.g.map(function(u,k){return '<button type="button" data-src="'+u+'"'+(k?'':' class="on"')+' aria-label="Ảnh '+(k+1)+'"><img src="'+u+'" alt=""></button>'}).join(''):'';
  $('.qv-body',qv).innerHTML='<div class="pd" data-pd><div class="gal"><div class="main"><img src="'+p.g[0]+'" alt="'+esc(p.n)+'"></div><div class="thumbs">'+thumbs+'</div></div>'+
- '<div class="pi"><span class="eyebrow">'+esc(p.c)+'</span><h2 class="qv-h">'+esc(p.n)+'</h2><div class="price"><b>'+vnd(p.p)+'</b>'+(d?'<s>'+vnd(p.o)+'</s><em>-'+d+'%</em>':'')+'</div>'+
+ '<div class="pi"><span class="eyebrow">'+esc(p.c)+'</span><h2 class="qv-h">'+esc(p.n)+'</h2><div class="price"><b>'+vnd(p.p)+unit(p)+'</b>'+(d?'<s>'+vnd(p.o)+'</s><em>-'+d+'%</em>':'')+'</div>'+
  '<table class="specs">'+p.s.map(function(r){return '<tr><th>'+r[0]+'</th><td>'+esc(r[1])+'</td></tr>'}).join('')+'</table>'+
  '<div class="buy"><div class="qty"><button type="button" data-d="-1" aria-label="Giảm">−</button><input class="qin" id="qv-qty" value="1" inputmode="numeric" aria-label="Số lượng"><button type="button" data-d="1" aria-label="Tăng">+</button></div><button class="btn o" type="button" data-add="'+id+'">Thêm vào giỏ</button></div>'+
  '<form class="oform" data-id="'+id+'"><h3>Đặt hàng nhanh</h3><div class="two"><input id="qv-ten" name="ten" placeholder="Họ tên" required autocomplete="name"><input id="qv-sdt" name="sdt" placeholder="Số điện thoại" required inputmode="tel" pattern="[0-9 +]{9,13}" autocomplete="tel"></div><input id="qv-dc" name="dc" placeholder="Địa chỉ nhận hàng" required autocomplete="street-address">'+(p.l?'<div class="two"><input id="qv-dol" name="dol" placeholder="Độ cận mắt trái" autocomplete="off"><input id="qv-dor" name="dor" placeholder="Độ cận mắt phải" autocomplete="off"></div>':'<input id="qv-gc" name="gc" placeholder="Ghi chú (không bắt buộc)">')+'<button class="btn" type="submit">Đặt hàng</button><div class="two"><button class="btn o" type="button" data-zalo>Gửi qua Zalo</button><button class="btn o" type="button" data-mess>Gửi qua Messenger</button></div><p class="note">Bấm Đặt hàng, đơn được gửi thẳng về SIHY. SIHY gọi xác nhận trước khi giao, thanh toán khi nhận hàng.</p><div class="done" hidden><b>Nội dung đơn hàng</b><pre></pre></div></form>'+
