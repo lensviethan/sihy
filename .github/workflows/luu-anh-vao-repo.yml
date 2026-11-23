@@ -1,0 +1,28 @@
+name: Lưu ảnh sihylens.vn vào repo
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/luu-anh-vao-repo.yml']
+permissions:
+  contents: write
+jobs:
+  luu-anh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache/restore@v4
+        with:
+          path: images
+          key: images-none
+          restore-keys: images-
+      - name: Tải ảnh từ sihylens.vn / kinhaptrong.com.vn và đổi sang đường dẫn nội bộ
+        run: SITE=/ python3 tools/localize_images.py .
+      - name: Commit ảnh và trang đã đổi đường dẫn
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && echo "Không có gì thay đổi" && exit 0
+          git commit -m "Lưu ảnh từ sihylens.vn vào repo trước khi chuyển tên miền"
+          git push

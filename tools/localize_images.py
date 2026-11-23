@@ -2,7 +2,7 @@
 # rồi đổi đường dẫn trong các trang sang ảnh nội bộ của sihy.vn. Ảnh nào tải lỗi thì giữ link cũ.
 import os, re, sys, urllib.request, urllib.parse, concurrent.futures as cf
 ROOT = sys.argv[1] if len(sys.argv) > 1 else '.'
-SITE = 'https://sihy.vn/'
+SITE = os.environ.get('SITE', 'https://sihy.vn/')
 PAT = re.compile(r'(?:https?:)?//(?:www\.)?(sihylens\.vn|kinhaptrong\.com\.vn)/([^"\'\s<>)]+?\.(?:jpe?g|png|gif|webp|svg))(\?[^"\'\s<>)]*)?', re.I)
 files = []
 for dp, dn, fn in os.walk(ROOT):
