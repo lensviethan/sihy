@@ -67,8 +67,15 @@ function pick(wrap){var q=+(($('.qin',wrap)||{}).value)||1,l=$('.dol',wrap),r=$(
 
 /* gửi đơn: email về SIHY (FormSubmit) + tùy chọn mở Zalo/Messenger */
 var MAIL='https://formsubmit.co/ajax/infor.sihy@gmail.com';
+/* Google Sheet (Apps Script): ghi đơn/lịch vào sheet + gửi email về SIHY; lỗi thì dùng FormSubmit dự phòng */
+var SHEET='https://script.google.com/macros/s/AKfycbzBj5hjIUUc8glg5PvEat9cVU0ByS7rfY7rthDq98O5lCSLQta8GBQsbg797XehxY9_3g/exec';
+function sheet(d){if(!SHEET)return Promise.resolve(false);d.trang=location.href;
+ return fetch(SHEET,{method:'POST',body:JSON.stringify(d)}).then(function(r){return r.json()}).then(function(j){return !!(j&&j.ok)}).catch(function(){return false})}
 function status(box,html,cls){if(!box)return;var st=$('.st',box);if(!st){st=document.createElement('p');st.className='st';box.insertBefore(st,box.firstChild)}st.className='st '+(cls||'');st.innerHTML=html}
-function mail(text,info,form){if(form&&form._sent===text)return Promise.resolve(true);
+function mail(text,info,form,to){if(form&&form._sent===text)return Promise.resolve(true);
+ var tt=(text.match(/Tạm tính: ([^\n]+)/)||[])[1]||'';
+ return sheet({loai:'don',ten:info.ten,sdt:info.sdt,dc:info.dc,noidung:text,tamtinh:tt,kenh:to==='zalo'?'Zalo + web':to==='mess'?'Messenger + web':'Web'}).then(function(ok){if(ok){if(form)form._sent=text;return true}return mailFS(text,info,form)})}
+function mailFS(text,info,form){
  var body={_subject:'Đơn hàng SIHY – '+info.ten+' – '+info.sdt,_template:'box',_captcha:'false','Khách hàng':info.ten,'Số điện thoại':info.sdt,'Địa chỉ':info.dc,'Nội dung đơn':text};
  return fetch(MAIL,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)})
   .then(function(r){return r.json().catch(function(){return{}}).then(function(j){var ok=r.ok&&String(j.success)!=='false';if(ok&&form)form._sent=text;return ok})})
@@ -78,7 +85,7 @@ function send(text,to,box,form,info,after){if(box){$('pre',box).textContent=text
  if(to!=='mail'){try{if(navigator.clipboard)navigator.clipboard.writeText(text).then(function(){toast('Đã sao chép đơn hàng. Dán vào khung chat để gửi.')},function(){})}catch(e){}
   window.open(to==='zalo'?'https://zalo.me/'+ZALO:MESS,'_blank','noopener')}
  status(box,'Đang gửi đơn về SIHY…');
- mail(text,info,form).then(function(ok){btns.forEach(function(b){b.disabled=false});
+ mail(text,info,form,to).then(function(ok){btns.forEach(function(b){b.disabled=false});
   if(ok){status(box,'<b>SIHY đã nhận đơn hàng.</b> Nhân viên sẽ gọi số '+esc(info.sdt)+' để xác nhận trước khi giao.','ok');toast('Đã gửi đơn hàng');if(after)after()}
   else status(box,'Chưa gửi được đơn qua email. Bấm <b>Gửi qua Zalo</b> hoặc gọi <a href="tel:'+ZALO+'">0862 626 488</a> để đặt hàng.','bad')})}
 function info(f){return{ten:f.ten.value.trim(),sdt:f.sdt.value.trim(),dc:f.dc.value.trim()}}
@@ -144,8 +151,9 @@ function bkBuild(){bk=document.createElement('div');bk.className='qv bk';bk.id='
   var btn=$('button[type=submit]',f),box=$('.done',f),ten=f.ten.value.trim(),p=f.ngay.value.split('-'),ngay=p[2]+'/'+p[1]+'/'+p[0],gio=f.gio.value;
   f._locked=true;btn.disabled=true;btn.textContent='Đang gửi…';$$('input,select',f).forEach(function(x){x.readOnly=true;if(x.tagName==='SELECT')x.disabled=true});
   var body={_subject:'Đặt lịch đo mắt SIHY – '+ten+' – '+sdt+' – '+gio+' '+ngay,_template:'box',_captcha:'false','Loại':'ĐẶT LỊCH ĐO MẮT','Khách hàng':ten,'Số điện thoại':sdt,'Ngày đo':ngay,'Giờ đo':gio,'Trang đặt':location.href};
-  fetch(MAIL,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)})
-  .then(function(r){return r.json().catch(function(){return{}}).then(function(j){return{ok:r.ok&&String(j.success)!=='false',m:j.message||('HTTP '+r.status)}})}).catch(function(e){return{ok:false,m:'Lỗi kết nối: '+(e&&e.message||'')}})
+  sheet({loai:'lich',ten:ten,sdt:sdt,ngay:ngay,gio:gio}).then(function(ok){if(ok)return{ok:true};
+  return fetch(MAIL,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)})
+  .then(function(r){return r.json().catch(function(){return{}}).then(function(j){return{ok:r.ok&&String(j.success)!=='false',m:j.message||('HTTP '+r.status)}})}).catch(function(e){return{ok:false,m:'Lỗi kết nối: '+(e&&e.message||'')}})})
   .then(function(res){var ok=res.ok;box.hidden=false;
    if(ok){btn.textContent='Đã đặt lịch';box.innerHTML='<p class="st ok"><b>Đặt lịch thành công!</b> Hẹn '+esc(ten)+' lúc <b>'+gio+' ngày '+ngay+'</b> tại SIHY, 111 Trần Khắc Chân, Quận 1. SIHY sẽ gọi số '+esc(sdt)+' để xác nhận.</p>';toast('Đặt lịch thành công')}
    else{f._locked=false;btn.disabled=false;btn.textContent='Gửi lại';$$('input,select',f).forEach(function(x){x.readOnly=false;x.disabled=false});
