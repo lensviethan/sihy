@@ -145,11 +145,11 @@ function bkBuild(){bk=document.createElement('div');bk.className='qv bk';bk.id='
   f._locked=true;btn.disabled=true;btn.textContent='Đang gửi…';$$('input,select',f).forEach(function(x){x.readOnly=true;if(x.tagName==='SELECT')x.disabled=true});
   var body={_subject:'Đặt lịch đo mắt SIHY – '+ten+' – '+sdt+' – '+gio+' '+ngay,_template:'box',_captcha:'false','Loại':'ĐẶT LỊCH ĐO MẮT','Khách hàng':ten,'Số điện thoại':sdt,'Ngày đo':ngay,'Giờ đo':gio,'Trang đặt':location.href};
   fetch(MAIL,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)})
-  .then(function(r){return r.json().catch(function(){return{}}).then(function(j){return r.ok&&String(j.success)!=='false'})}).catch(function(){return false})
-  .then(function(ok){box.hidden=false;
+  .then(function(r){return r.json().catch(function(){return{}}).then(function(j){return{ok:r.ok&&String(j.success)!=='false',m:j.message||('HTTP '+r.status)}})}).catch(function(e){return{ok:false,m:'Lỗi kết nối: '+(e&&e.message||'')}})
+  .then(function(res){var ok=res.ok;box.hidden=false;
    if(ok){btn.textContent='Đã đặt lịch';box.innerHTML='<p class="st ok"><b>Đặt lịch thành công!</b> Hẹn '+esc(ten)+' lúc <b>'+gio+' ngày '+ngay+'</b> tại SIHY, 111 Trần Khắc Chân, Quận 1. SIHY sẽ gọi số '+esc(sdt)+' để xác nhận.</p>';toast('Đặt lịch thành công')}
    else{f._locked=false;btn.disabled=false;btn.textContent='Gửi lại';$$('input,select',f).forEach(function(x){x.readOnly=false;x.disabled=false});
-    box.innerHTML='<p class="st bad">Chưa gửi được lịch hẹn. Vui lòng thử lại hoặc gọi <a href="tel:'+ZALO+'">0862 626 488</a>.</p>'}})})}
+    box.innerHTML='<p class="st bad">Chưa gửi được lịch hẹn. Vui lòng thử lại hoặc gọi <a href="tel:'+ZALO+'">0862 626 488</a>.<br><small>Mã lỗi: '+esc(res.m)+'</small></p>'}})})}
 function bkOpen(){if(!bk)bkBuild();else if(!$('#bk-form')._locked)bkSlots();bk.hidden=false;document.body.style.overflow='hidden';var f=$('#bk-form');if(!f._locked)setTimeout(function(){f.ten.focus()},50)}
 function bkClose(){bk.hidden=true;document.body.style.overflow=''}
 $$('[data-booking]').forEach(function(a){a.addEventListener('click',function(e){if(e.ctrlKey||e.metaKey||e.shiftKey)return;e.preventDefault();bkOpen()})});

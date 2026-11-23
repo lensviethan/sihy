@@ -336,3 +336,6 @@ textarea{min-height:84px;resize:vertical}
 input[readonly],select:disabled{opacity:.7}
 @media(max-width:860px){.bk{padding:16px}.bk .pn{height:auto;border-radius:20px}}
 .bk .eyebrow{display:block;padding-right:52px}
+.bk .two>*{min-width:0}
+.bk input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;text-align:left}
+.bk input[type=date]::-webkit-date-and-time-value{text-align:left}
